@@ -1,0 +1,9 @@
+{
+  "name": "brkk-twitch-site",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run install-deps",
+    "install-deps": "apt-get update && apt-get install -y youtube-dl ffmpeg"
+  }
+}
+
