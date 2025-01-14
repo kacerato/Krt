@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "dependencies": {
     "youtube-dl-exec": "^2.4.6",
-    "@ffmpeg/ffmpeg": "^0.12.6",
-    "@ffmpeg/util": "^4.0.5"
+    "@ffmpeg/ffmpeg": "^0.11.0",
+    "@ffmpeg/util": "^0.12.1"
   }
 }
 
