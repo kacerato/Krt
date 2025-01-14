@@ -1,6 +1,6 @@
 const clientId = "v2h2uedgpuw2fz35wtn942e9vsf2c9";
 const accessToken = "st6jpeqk6jidreb6cnlw08zn5fwjbk";
-const username = "brkk"; 
+const username = "brkk";
 
 const twitchUserApi = `https://api.twitch.tv/helix/users?login=${username}`;
 const twitchStreamApi = `https://api.twitch.tv/helix/streams?user_login=${username}`;
@@ -100,7 +100,7 @@ async function renderClips() {
     return;
   }
 
-  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkk.netlify.app`;
+  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkkstatus.netlify.app`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   clips.forEach((clip, index) => {
@@ -117,7 +117,7 @@ async function renderClips() {
 
     const selectButton = clipElement.querySelector(".select-clip-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkk.netlify.app`;
+      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkkstatus.netlify.app`;
     });
 
     clipsContainer.appendChild(clipElement);
@@ -178,7 +178,7 @@ async function renderVods() {
     return;
   }
 
-  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkk.netlify.app`;
+  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkkstatus.netlify.app`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   vods.forEach((vod) => {
@@ -197,7 +197,7 @@ async function renderVods() {
 
     const selectButton = vodElement.querySelector(".select-vod-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkk.netlify.app`;
+      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkkstatus.netlify.app`;
       document.querySelectorAll('.vod').forEach(v => v.classList.remove('active'));
       vodElement.classList.add('active');
     });
@@ -239,6 +239,7 @@ function adjustPlayerSize() {
 async function downloadVod(vodId, startSeconds, endSeconds) {
   try {
     console.log('Iniciando download do VOD:', vodId, 'de', formatTime(startSeconds), 'a', formatTime(endSeconds));
+    const vodUrl = `https://www.twitch.tv/videos/${vodId}`;
     
     let statusElement = document.getElementById('download-status');
     if (!statusElement) {
@@ -262,7 +263,7 @@ async function downloadVod(vodId, startSeconds, endSeconds) {
     console.log('Obtendo URL do stream...');
     const streamUrlResponse = await fetch('/.netlify/functions/getStreamUrl', {
       method: 'POST',
-      body: JSON.stringify({ vodId })
+      body: JSON.stringify({ vodUrl })
     });
 
     if (!streamUrlResponse.ok) {
@@ -271,38 +272,34 @@ async function downloadVod(vodId, startSeconds, endSeconds) {
 
     const { streamUrl } = await streamUrlResponse.json();
 
-    console.log('Iniciando download e corte do vídeo...');
-    
-    // Carregando FFmpeg
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
-    await ffmpeg.load();
+    console.log('Iniciando download com ffmpeg...');
+    const response = await fetch('/.netlify/functions/downloadVod', {
+      method: 'POST',
+      body: JSON.stringify({
+        vodId,
+        vodUrl: streamUrl,
+        start: startSeconds,
+        end: endSeconds
+      })
+    });
 
-    // Baixando o vídeo
-    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(streamUrl));
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Erro recebido do servidor:', errorText);
+      throw new Error(`Falha ao baixar o VOD: ${errorText}`);
+    }
 
-    // Cortando o vídeo
-    await ffmpeg.run('-ss', formatTime(startSeconds), '-i', 'input.mp4', '-t', formatTime(endSeconds - startSeconds), '-c', 'copy', 'output.mp4');
-
-    // Lendo o arquivo de saída
-    const data = ffmpeg.FS('readFile', 'output.mp4');
-
-    // Criando um blob e iniciando o download
-    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-    const url = URL.createObjectURL(blob);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
+    a.style.display = 'none';
     a.href = url;
     a.download = `brkk_vod_${vodId}_${startSeconds}_${endSeconds}.mp4`;
     document.body.appendChild(a);
     a.click();
+    window.URL.revokeObjectURL(url);
     
-    // Limpeza
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
-
-    console.log('Download concluído');
+    console.log('Download iniciado no navegador');
     statusElement.textContent = 'Download concluído. Verifique seus downloads.';
     setTimeout(() => {
       statusElement.style.display = 'none';
