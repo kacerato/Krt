@@ -1,66 +1,43 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
+const { createFFmpeg } = require('@ffmpeg/ffmpeg');
+const { fetchFile } = require('@ffmpeg/util');
 
 exports.handler = async (event) => {
-  const { vodId, vodUrl, start, end } = JSON.parse(event.body);
+  try {
+    const { vodUrl, start, end } = JSON.parse(event.body);
+    
+    const ffmpeg = createFFmpeg({ log: true });
+    await ffmpeg.load();
 
-  const tempDir = path.join(os.tmpdir(), 'vod-downloads');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir);
-  }
+    const inputData = await fetchFile(vodUrl);
+    ffmpeg.FS('writeFile', 'input.mp4', inputData);
 
-  const outputFile = path.join(tempDir, `brkk_vod_${vodId}_${start}_${end}.mp4`);
-
-  return new Promise((resolve, reject) => {
-    const ffmpegCommand = [
+    await ffmpeg.run(
       '-ss', formatTime(start),
-      '-i', vodUrl,
+      '-i', 'input.mp4',
       '-t', formatTime(end - start),
       '-c', 'copy',
-      '-avoid_negative_ts', 'make_zero',
-      '-y',
-      outputFile
-    ];
+      'output.mp4'
+    );
 
-    const ffmpeg = spawn('ffmpeg', ffmpegCommand);
-
-    let errorLogs = '';
-    ffmpeg.stderr.on('data', (data) => {
-      errorLogs += data.toString();
-      console.error('ffmpeg stderr:', data.toString());
-    });
-
-    ffmpeg.on('close', (code) => {
-      if (code === 0 && fs.existsSync(outputFile)) {
-        const fileContent = fs.readFileSync(outputFile);
-        fs.unlinkSync(outputFile);
-        resolve({
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'video/mp4',
-            'Content-Disposition': `attachment; filename="brkk_vod_${vodId}_${start}_${end}.mp4"`
-          },
-          body: fileContent.toString('base64'),
-          isBase64Encoded: true
-        });
-      } else {
-        reject({
-          statusCode: 500,
-          body: JSON.stringify({ error: `Error processing VOD: ${errorLogs}` })
-        });
-      }
-    });
-
-    ffmpeg.on('error', (err) => {
-      reject({
-        statusCode: 500,
-        body: JSON.stringify({ error: `Error executing ffmpeg: ${err.message}` })
-      });
-    });
-  });
-};
+    const data = ffmpeg.FS('readFile', 'output.mp4');
+    
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Disposition': `attachment; filename="clip_${start}_${end}.mp4"`
+      },
+      body: Buffer.from(data).toString('base64'),
+      isBase64Encoded: true
+    };
+  } catch (error) {
+    console.error('Erro ao processar vídeo:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: `Erro ao processar vídeo: ${error.message}` })
+    };
+  }
+}
 
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600);
@@ -69,4 +46,3 @@ function formatTime(seconds) {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-  
