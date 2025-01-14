@@ -5,7 +5,7 @@ exports.handler = async (event) => {
     const { vodId } = JSON.parse(event.body);
     const accessToken = process.env.TWITCH_ACCESS_TOKEN;
     const clientId = process.env.TWITCH_CLIENT_ID;
-
+ 
     // Obter informações do VOD
     const vodInfoResponse = await fetch(`https://api.twitch.tv/helix/videos?id=${vodId}`, {
       headers: {
