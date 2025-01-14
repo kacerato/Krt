@@ -2,9 +2,8 @@
   "name": "brkk-twitch-site",
   "version": "1.0.0",
   "dependencies": {
-    "youtube-dl-exec": "^2.4.6",
-    "@ffmpeg/ffmpeg": "^0.11.0",
-    "@ffmpeg/util": "^0.12.1"
+    "node-fetch": "^3.3.0",
+    "m3u8-parser": "^6.0.0"
   }
 }
 
