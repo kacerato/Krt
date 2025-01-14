@@ -100,7 +100,7 @@ async function renderClips() {
     return;
   }
 
-  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkk.netlify.app`;
+  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkkstatus.netlify.app`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   clips.forEach((clip, index) => {
@@ -117,7 +117,7 @@ async function renderClips() {
 
     const selectButton = clipElement.querySelector(".select-clip-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkk.netlify.app`;
+      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkkstatus.netlify.app`;
     });
 
     clipsContainer.appendChild(clipElement);
@@ -178,7 +178,7 @@ async function renderVods() {
     return;
   }
 
-  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkk.netlify.app`;
+  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkkstatus.netlify.app`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   vods.forEach((vod) => {
@@ -197,7 +197,7 @@ async function renderVods() {
 
     const selectButton = vodElement.querySelector(".select-vod-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkk.netlify.app`;
+      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkkstatus.netlify.app`;
       document.querySelectorAll('.vod').forEach(v => v.classList.remove('active'));
       vodElement.classList.add('active');
     });
