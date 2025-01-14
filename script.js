@@ -236,7 +236,6 @@ function adjustPlayerSize() {
   }
 }
 
-
 async function downloadVod(vodId, startSeconds, endSeconds) {
   try {
     console.log('Iniciando download do VOD:', vodId, 'de', formatTime(startSeconds), 'a', formatTime(endSeconds));
@@ -515,4 +514,3 @@ document.querySelectorAll('.select-vod-btn').forEach(button => {
 
 window.addEventListener("resize", adjustPlayerSize);
 
-        
