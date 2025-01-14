@@ -1,36 +1,24 @@
-const { spawn } = require('child_process');
+const youtubedl = require('youtube-dl-exec')
 
 exports.handler = async (event) => {
-  const { vodUrl } = JSON.parse(event.body);
+  try {
+    const { vodUrl } = JSON.parse(event.body);
+    
+    const output = await youtubedl(vodUrl, {
+      getUrl: true,
+      format: 'best'
+    })
 
-  return new Promise((resolve, reject) => {
-    const youtubeDl = spawn('youtube-dl', ['-g', '-f', 'best', vodUrl]);
-    let streamUrl = '';
-    let errorOutput = '';
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ streamUrl: output })
+    }
+  } catch (error) {
+    console.error('Erro ao obter URL do stream:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: `Falha ao obter URL do stream: ${error.message}` })
+    }
+  }
+}
 
-    youtubeDl.stdout.on('data', (data) => {
-      streamUrl += data.toString();
-    });
-
-    youtubeDl.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-      console.error('youtube-dl stderr:', data.toString());
-    });
-
-    youtubeDl.on('close', (code) => {
-      if (code === 0 && streamUrl) {
-        resolve({
-          statusCode: 200,
-          body: JSON.stringify({ streamUrl: streamUrl.trim() })
-        });
-      } else {
-        reject({
-          statusCode: 500,
-          body: JSON.stringify({ error: `Failed to get stream URL: ${errorOutput}` })
-        });
-      }
-    });
-  });
-};
-
-      
