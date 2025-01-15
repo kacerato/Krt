@@ -100,7 +100,7 @@ async function renderClips() {
     return;
   }
 
-  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkkstatus.netlify.app`;
+  mainPlayerIframe.src = `${clips[0].embed_url}&parent=${window.location.hostname}`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   clips.forEach((clip, index) => {
@@ -117,7 +117,7 @@ async function renderClips() {
 
     const selectButton = clipElement.querySelector(".select-clip-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkkstatus.netlify.app`;
+      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=${window.location.hostname}`;
     });
 
     clipsContainer.appendChild(clipElement);
@@ -178,7 +178,7 @@ async function renderVods() {
     return;
   }
 
-  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkkstatus.netlify.app`;
+  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=${window.location.hostname}`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   vods.forEach((vod) => {
@@ -197,7 +197,7 @@ async function renderVods() {
 
     const selectButton = vodElement.querySelector(".select-vod-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkkstatus.netlify.app`;
+      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=${window.location.hostname}`;
       document.querySelectorAll('.vod').forEach(v => v.classList.remove('active'));
       vodElement.classList.add('active');
     });
@@ -236,6 +236,37 @@ function adjustPlayerSize() {
   }
 }
 
+function updateProgressBar(vodId) {
+  const progressBar = document.getElementById('download-progress');
+  const progressBarFill = progressBar.querySelector('.progress-bar-fill');
+
+  function checkProgress() {
+    fetch(`/api/downloadprogress/${vodId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.progress) {
+          const percent = (data.progress.current / data.progress.duration) * 100;
+          progressBarFill.style.width = `${percent}%`;
+          if (percent < 100) {
+            setTimeout(checkProgress, 1000);
+          } else {
+            progressBar.style.display = 'none';
+          }
+        } else {
+          // If no progress data, check again after a short delay
+          setTimeout(checkProgress, 1000);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching progress:', error);
+        setTimeout(checkProgress, 1000);
+      });
+  }
+
+  progressBar.style.display = 'block';
+  checkProgress();
+}
+
 async function downloadVod(vodId, startSeconds, endSeconds) {
   try {
     console.log('Iniciando download do VOD:', vodId, 'de', formatTime(startSeconds), 'a', formatTime(endSeconds));
@@ -260,34 +291,31 @@ async function downloadVod(vodId, startSeconds, endSeconds) {
     }
     progressBar.style.display = 'block';
 
-    console.log('Obtendo URL do stream...');
-    const streamUrlResponse = await fetch('/.netlify/functions/getStreamUrl', {
+    updateProgressBar(vodId);
+
+    console.log('Enviando solicitação para o servidor...');
+    const response = await fetch('/api/downloadvod', {
       method: 'POST',
-      body: JSON.stringify({ vodUrl })
-    });
-
-    if (!streamUrlResponse.ok) {
-      throw new Error(`Failed to get stream URL: ${await streamUrlResponse.text()}`);
-    }
-
-    const { streamUrl } = await streamUrlResponse.json();
-
-    console.log('Iniciando download com ffmpeg...');
-    const response = await fetch('/.netlify/functions/downloadVod', {
-      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         vodId,
-        vodUrl: streamUrl,
+        vodUrl,
         start: startSeconds,
         end: endSeconds
       })
     });
+
+    console.log('Resposta recebida do servidor. Status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Erro recebido do servidor:', errorText);
       throw new Error(`Falha ao baixar o VOD: ${errorText}`);
     }
+
+    statusElement.textContent = 'Download iniciado. Verifique a barra de downloads do seu navegador.';
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
@@ -300,7 +328,6 @@ async function downloadVod(vodId, startSeconds, endSeconds) {
     window.URL.revokeObjectURL(url);
     
     console.log('Download iniciado no navegador');
-    statusElement.textContent = 'Download concluído. Verifique seus downloads.';
     setTimeout(() => {
       statusElement.style.display = 'none';
       progressBar.style.display = 'none';
@@ -513,4 +540,3 @@ document.querySelectorAll('.select-vod-btn').forEach(button => {
 });
 
 window.addEventListener("resize", adjustPlayerSize);
-
