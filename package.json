@@ -1,9 +1,15 @@
 {
-  "name": "brkk-twitch-site",
+  "name": "brkk-status-site",
   "version": "1.0.0",
+  "description": "Site de status e clipes do BRKK",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
-    "node-fetch": "^3.3.0",
-    "m3u8-parser": "^6.0.0",
-    "@ffmpeg/ffmpeg": "^0.10.0"
+    "express": "^4.17.1"
+  },
+  "engines": {
+    "node": "14.x"
   }
 }
