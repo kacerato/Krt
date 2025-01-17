@@ -1,0 +1,20 @@
+{
+  "name": "brkk-twitch-status",
+  "version": "1.0.0",
+  "description": "Aplicação para mostrar o status do canal da Twitch do BRKK",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["twitch", "brkk", "status"],
+  "author": "Seu Nome",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
