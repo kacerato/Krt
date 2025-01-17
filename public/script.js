@@ -1,4 +1,4 @@
-const API_URL = process.env.NODE_ENV === 'production' ? 'https://your-render-app-url.onrender.com' : 'http://localhost:3000';
+const API_URL = process.env.NODE_ENV === 'production' ? 'https://krt-4iyr.onrender.com' : 'http://localhost:3000';
 const clientId = process.env.TWITCH_CLIENT_ID;
 const accessToken = process.env.TWITCH_ACCESS_TOKEN;
 const username = "brkk";
