@@ -1,5 +1,6 @@
-const clientId = "v2h2uedgpuw2fz35wtn942e9vsf2c9";
-const accessToken = "st6jpeqk6jidreb6cnlw08zn5fwjbk";
+const API_URL = process.env.NODE_ENV === 'production' ? 'https://your-render-app-url.onrender.com' : 'http://localhost:3000';
+const clientId = process.env.TWITCH_CLIENT_ID;
+const accessToken = process.env.TWITCH_ACCESS_TOKEN;
 const username = "brkk";
 
 const twitchUserApi = `https://api.twitch.tv/helix/users?login=${username}`;
@@ -100,7 +101,7 @@ async function renderClips() {
     return;
   }
 
-  mainPlayerIframe.src = `${clips[0].embed_url}&parent=${window.location.hostname}`;
+  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkk.netlify.app`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   clips.forEach((clip, index) => {
@@ -117,7 +118,7 @@ async function renderClips() {
 
     const selectButton = clipElement.querySelector(".select-clip-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=${window.location.hostname}`;
+      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkk.netlify.app`;
     });
 
     clipsContainer.appendChild(clipElement);
@@ -178,7 +179,7 @@ async function renderVods() {
     return;
   }
 
-  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=${window.location.hostname}`;
+  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkk.netlify.app`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   vods.forEach((vod) => {
@@ -197,7 +198,7 @@ async function renderVods() {
 
     const selectButton = vodElement.querySelector(".select-vod-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=${window.location.hostname}`;
+      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkk.netlify.app`;
       document.querySelectorAll('.vod').forEach(v => v.classList.remove('active'));
       vodElement.classList.add('active');
     });
@@ -241,7 +242,7 @@ function updateProgressBar(vodId) {
   const progressBarFill = progressBar.querySelector('.progress-bar-fill');
 
   function checkProgress() {
-    fetch(`/api/downloadprogress/${vodId}`)
+    fetch(`${API_URL}/api/downloadprogress/${vodId}`)
       .then(response => response.json())
       .then(data => {
         if (data.progress) {
@@ -294,7 +295,7 @@ async function downloadVod(vodId, startSeconds, endSeconds) {
     updateProgressBar(vodId);
 
     console.log('Enviando solicitação para o servidor...');
-    const response = await fetch('/api/downloadvod', {
+    const response = await fetch(`${API_URL}/api/downloadvod`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -540,3 +541,4 @@ document.querySelectorAll('.select-vod-btn').forEach(button => {
 });
 
 window.addEventListener("resize", adjustPlayerSize);
+
