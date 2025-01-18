@@ -1,41 +1,45 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
 const app = express();
 
+// Configuração da porta
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Criação do diretório temporário
 const tempDir = path.join(__dirname, 'temp');
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
+// Função para limpar arquivos temporários
 function cleanupTempFiles() {
   fs.readdir(tempDir, (err, files) => {
     if (err) throw err;
 
     for (const file of files) {
       fs.unlink(path.join(tempDir, file), err => {
-        if (err) console.error(`Error deleting file ${file}:`, err);
+        if (err) console.error(`Erro ao deletar arquivo ${file}:`, err);
       });
     }
   });
 }
 
+// Limpeza inicial e configuração de limpeza periódica
 cleanupTempFiles();
+setInterval(cleanupTempFiles, 3600000); // Limpa a cada hora
 
-setInterval(cleanupTempFiles, 3600000);
-
+// Função para obter a URL do stream
 function getStreamUrl(vodUrl) {
   return new Promise((resolve, reject) => {
     exec(`yt-dlp -g -f best "${vodUrl}"`, (error, stdout, stderr) => {
       if (error) {
-        console.error(`exec error: ${error}`);
-        reject(new Error(`Failed to get stream URL: ${stderr}`));
+        console.error(`Erro de execução: ${error}`);
+        reject(new Error(`Falha ao obter URL do stream: ${stderr}`));
         return;
       }
       resolve(stdout.trim());
@@ -43,13 +47,16 @@ function getStreamUrl(vodUrl) {
   });
 }
 
+// Objeto para armazenar o progresso do download
 let downloadProgress = {};
 
+// Rota para verificar o progresso do download
 app.get('/api/downloadprogress/:vodId', (req, res) => {
   const vodId = req.params.vodId;
   res.json({ progress: downloadProgress[vodId] || 0 });
 });
 
+// Funções auxiliares para manipulação de tempo
 function parseTime(time) {
   if (typeof time === 'number') {
     return time;
@@ -75,6 +82,7 @@ function formatTime(seconds) {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+// Rota principal para download de VOD
 app.post('/api/downloadvod', async (req, res) => {
   const { vodId, vodUrl, start, end } = req.body;
 
@@ -133,7 +141,7 @@ app.post('/api/downloadvod', async (req, res) => {
     });
 
     ffmpeg.on('close', (code) => {
-      console.log('ffmpeg processo fechado com código:', code);
+      console.log('Processo ffmpeg fechado com código:', code);
       if (code === 0 && fs.existsSync(outputFile)) {
         console.log('Arquivo criado com sucesso:', outputFile);
         const fileStats = fs.statSync(outputFile);
@@ -175,6 +183,7 @@ app.post('/api/downloadvod', async (req, res) => {
   }
 });
 
+// Inicialização do servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
