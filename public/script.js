@@ -1,6 +1,6 @@
 const clientId = "v2h2uedgpuw2fz35wtn942e9vsf2c9";
 const accessToken = "st6jpeqk6jidreb6cnlw08zn5fwjbk";
-const username = "gaules";
+const username = "brkk";
 
 const twitchUserApi = `https://api.twitch.tv/helix/users?login=${username}`;
 const twitchStreamApi = `https://api.twitch.tv/helix/streams?user_login=${username}`;
@@ -100,7 +100,7 @@ async function renderClips() {
     return;
   }
 
-  mainPlayerIframe.src = `${clips[0].embed_url}&parent=localhost&parent=brkk.netlify.app`;
+  mainPlayerIframe.src = `${clips[0].embed_url}&parent=${window.location.hostname}`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   clips.forEach((clip, index) => {
@@ -117,7 +117,7 @@ async function renderClips() {
 
     const selectButton = clipElement.querySelector(".select-clip-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=localhost&parent=brkk.netlify.app`;
+      mainPlayerIframe.src = `${selectButton.dataset.clipUrl}&parent=${window.location.hostname}`;
     });
 
     clipsContainer.appendChild(clipElement);
@@ -178,7 +178,7 @@ async function renderVods() {
     return;
   }
 
-  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=localhost&parent=brkk.netlify.app`;
+  mainPlayerIframe.src = `https://player.twitch.tv/?video=${vods[0].id}&parent=${window.location.hostname}`;
   mainPlayer.appendChild(mainPlayerIframe);
 
   vods.forEach((vod) => {
@@ -197,7 +197,7 @@ async function renderVods() {
 
     const selectButton = vodElement.querySelector(".select-vod-btn");
     selectButton.addEventListener("click", () => {
-      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=localhost&parent=brkk.netlify.app`;
+      mainPlayerIframe.src = `https://player.twitch.tv/?video=${selectButton.dataset.vodId}&parent=${window.location.hostname}`;
       document.querySelectorAll('.vod').forEach(v => v.classList.remove('active'));
       vodElement.classList.add('active');
     });
@@ -540,4 +540,3 @@ document.querySelectorAll('.select-vod-btn').forEach(button => {
 });
 
 window.addEventListener("resize", adjustPlayerSize);
-
