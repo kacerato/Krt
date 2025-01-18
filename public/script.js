@@ -1,6 +1,6 @@
 const clientId = "v2h2uedgpuw2fz35wtn942e9vsf2c9";
 const accessToken = "st6jpeqk6jidreb6cnlw08zn5fwjbk";
-const username = "brkk";
+const username = "gaules";
 
 const twitchUserApi = `https://api.twitch.tv/helix/users?login=${username}`;
 const twitchStreamApi = `https://api.twitch.tv/helix/streams?user_login=${username}`;
