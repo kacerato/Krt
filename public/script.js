@@ -1,6 +1,5 @@
-const API_URL = process.env.NODE_ENV === 'production' ? 'https://krt-4iyr.onrender.com' : 'http://localhost:3000';
-const clientId = process.env.TWITCH_CLIENT_ID;
-const accessToken = process.env.TWITCH_ACCESS_TOKEN;
+const clientId = "v2h2uedgpuw2fz35wtn942e9vsf2c9";
+const accessToken = "st6jpeqk6jidreb6cnlw08zn5fwjbk";
 const username = "brkk";
 
 const twitchUserApi = `https://api.twitch.tv/helix/users?login=${username}`;
@@ -242,7 +241,7 @@ function updateProgressBar(vodId) {
   const progressBarFill = progressBar.querySelector('.progress-bar-fill');
 
   function checkProgress() {
-    fetch(`${API_URL}/api/downloadprogress/${vodId}`)
+    fetch(`/api/downloadprogress/${vodId}`)
       .then(response => response.json())
       .then(data => {
         if (data.progress) {
@@ -295,7 +294,7 @@ async function downloadVod(vodId, startSeconds, endSeconds) {
     updateProgressBar(vodId);
 
     console.log('Enviando solicitação para o servidor...');
-    const response = await fetch(`${API_URL}/api/downloadvod`, {
+    const response = await fetch('/api/downloadvod', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
