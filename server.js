@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { spawn } = require('child_process');
+const { exec } = require('child_process');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -32,25 +32,13 @@ setInterval(cleanupTempFiles, 3600000);
 
 function getStreamUrl(vodUrl) {
   return new Promise((resolve, reject) => {
-    const youtubeDl = spawn('youtube-dl', ['-g', '-f', 'best', vodUrl]);
-    let streamUrl = '';
-    let errorOutput = '';
-
-    youtubeDl.stdout.on('data', (data) => {
-      streamUrl += data.toString();
-    });
-
-    youtubeDl.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-      console.error('youtube-dl stderr:', data.toString());
-    });
-
-    youtubeDl.on('close', (code) => {
-      if (code === 0 && streamUrl) {
-        resolve(streamUrl.trim());
-      } else {
-        reject(new Error(`Failed to get stream URL: ${errorOutput}`));
+    exec(`yt-dlp -g -f best "${vodUrl}"`, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`exec error: ${error}`);
+        reject(new Error(`Failed to get stream URL: ${stderr}`));
+        return;
       }
+      resolve(stdout.trim());
     });
   });
 }
@@ -98,7 +86,7 @@ app.post('/api/downloadvod', async (req, res) => {
   console.log('Recebida solicitação de download:', { vodId, vodUrl, start, end });
 
   try {
-    console.log('Obtendo URL do stream com youtube-dl...');
+    console.log('Obtendo URL do stream com yt-dlp...');
     const streamUrl = await getStreamUrl(vodUrl);
     console.log('URL do stream obtida:', streamUrl);
 
@@ -190,4 +178,3 @@ app.post('/api/downloadvod', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-
